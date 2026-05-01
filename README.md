@@ -21,13 +21,15 @@ So here’s the button they refused to build.
 
 ## Install (10 seconds)
 
+**Easiest:** Go to [edgeof8.github.io/bttn](https://edgeof8.github.io/bttn) and drag the button to your bookmarks bar. Done.
+
+**Manual:**
+
 1. Show your bookmarks bar (`Ctrl+Shift+B` / `Cmd+Shift+B`)
 2. Right-click the bar → **Add bookmark**
 3. Name it `bttn` (or whatever you want)
 4. Copy the minified code below
 5. Paste it into the **URL** field and save
-
-That’s it. The bookmark is now a button.
 
 ---
 

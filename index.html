@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bttn — drag to install</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2.5rem;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      color: #8b949e;
+      font-size: 1.05rem;
+      max-width: 440px;
+      line-height: 1.6;
+    }
+
+    .drag-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8b949e;
+    }
+
+    .bookmarklet {
+      display: inline-block;
+      padding: 0.75rem 1.75rem;
+      background: #238636;
+      color: #ffffff;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      border: 1px solid #2ea043;
+      cursor: grab;
+      user-select: none;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .bookmarklet:hover {
+      background: #2ea043;
+    }
+
+    .bookmarklet:active {
+      cursor: grabbing;
+      transform: scale(0.97);
+    }
+
+    .arrow {
+      font-size: 1.5rem;
+      animation: bounce 1.4s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .bookmarks-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+
+    .bookmarks-bar span { color: #e6edf3; }
+
+    .manual {
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+
+    .manual a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+
+    .manual a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <h1>bttn</h1>
+  <p>One bookmarklet. Your full AI conversation on the clipboard as clean Markdown.</p>
+
+  <div class="drag-area">
+    <div class="label">drag this to your bookmarks bar</div>
+    <div class="arrow">&#8595;</div>
+    <a class="bookmarklet" href="javascript:(async()=>{const SEP=&quot;\n\n---\n\n&quot;;const h=location.hostname;let out=&quot;&quot;;function nodeToMd(el){let t=&quot;&quot;;el.childNodes.forEach(n=>{if(n.nodeType===3){t+=n.textContent;return;}if(n.nodeType!==1)return;const tag=n.tagName;if(n.closest('[data-testid=&quot;thought-block&quot;],.thoughts-container,.model-thoughts,.thinking-container'))return;if(tag===&quot;BR&quot;){t+=&quot;\n&quot;;return;}if(tag===&quot;A&quot;){t+=&quot; &quot;+nodeToMd(n).trim()+&quot; &quot;;return;}if(tag===&quot;PRE&quot;){const code=n.querySelector(&quot;code&quot;);const lang=(code?.className||&quot;&quot;).match(/language-(\w+)/)?.[1]||&quot;&quot;;t+=&quot;\n```&quot;+lang+&quot;\n&quot;+(code||n).innerText.trim()+&quot;\n```\n&quot;;return;}if(tag===&quot;CODE&quot;&amp;&amp;n.parentElement?.tagName!==&quot;PRE&quot;){t+=&quot;`&quot;+n.innerText+&quot;`&quot;;return;}if(tag===&quot;STRONG&quot;||tag===&quot;B&quot;){t+=&quot;**&quot;+nodeToMd(n)+&quot;**&quot;;return;}if(tag===&quot;EM&quot;||tag===&quot;I&quot;){t+=&quot;*&quot;+nodeToMd(n)+&quot;*&quot;;return;}if([&quot;H1&quot;,&quot;H2&quot;,&quot;H3&quot;,&quot;H4&quot;].includes(tag)){const lvl=&quot;#&quot;.repeat(parseInt(tag[1]));t+=&quot;\n&quot;+lvl+&quot; &quot;+nodeToMd(n).trim()+&quot;\n&quot;;return;}if(tag===&quot;LI&quot;){t+=&quot;\n- &quot;+nodeToMd(n).trim();return;}if(tag===&quot;UL&quot;||tag===&quot;OL&quot;){t+=&quot;\n&quot;+nodeToMd(n)+&quot;\n&quot;;return;}if([&quot;P&quot;,&quot;DIV&quot;,&quot;TR&quot;].includes(tag)){const inner=nodeToMd(n).trim();if(inner)t+=&quot;\n&quot;+inner+&quot;\n&quot;;return;}t+=nodeToMd(n);});return t;}function clean(txt){return txt.replace(/\n{3,}/g,&quot;\n\n&quot;).replace(/\s{2,}/g,&quot; &quot;).trim();}function isGhost(txt){return /^\s*(Human|Model|Assistant|User)?\s*\d*:?\d*\s*(AM|PM)?\s*$/.test(txt.trim());}function extract(el){const cl=el.cloneNode(true);cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*=&quot;thought&quot;],[class*=&quot;expand&quot;],.mat-expansion-panel,[data-testid=&quot;thought-block&quot;]').forEach(e=>e.remove());return clean(nodeToMd(cl));}if(h.includes(&quot;claude.ai&quot;)){document.querySelectorAll('[data-test-render-count]').forEach(t=>{const u=t.querySelector('[data-testid=&quot;user-message&quot;]');const a=t.querySelector('.font-claude-response');if(u){const txt=extract(u);if(txt&amp;&amp;!isGhost(txt))out+=&quot;**Human**\n\n&quot;+txt+SEP;}if(a){const txt=extract(a);if(txt&amp;&amp;!isGhost(txt))out+=&quot;**Claude**\n\n&quot;+txt+SEP;}});}else if(h.includes(&quot;aistudio.google&quot;)){const sc=document.querySelector('[data-autoscroll-container]')||document.documentElement;const sv=sc.scrollTop;sc.scrollTop=0;await new Promise(r=>setTimeout(r,500));const mc=document.querySelector('ms-prompt-editor .view-lines');if(mc){const t=mc.innerText.trim();if(t)out+=&quot;**Initial Prompt**\n\n&quot;+t+SEP;}sc.scrollTop=sv;document.querySelectorAll('ms-chat-turn').forEach(t=>{const isUser=!!t.querySelector('.user-prompt-container');const tc=t.querySelector('.turn-content');if(tc){const txt=extract(tc).replace(/^(Human|Model)\s+\d+:\d+\s*(AM|PM)?\s*\n?/,'').trim();if(txt&amp;&amp;!isGhost(txt))out+=`**${isUser?'Human':'Model'}**\n\n${txt}${SEP}`;}});}else if(h.includes(&quot;chatgpt.com&quot;)||h.includes(&quot;chat.openai&quot;)){document.querySelectorAll('div[data-message-author-role]').forEach(m=>{const role=m.getAttribute('data-message-author-role');const txt=extract(m);if(txt&amp;&amp;!isGhost(txt))out+=`**${role==='user'?'Human':'Assistant'}**\n\n${txt}${SEP}`;});}else if(h.includes(&quot;grok.com&quot;)||h.includes(&quot;x.com&quot;)){document.querySelectorAll('[data-testid=&quot;user-message&quot;],[data-testid=&quot;assistant-message&quot;]').forEach(m=>{const isUser=m.getAttribute('data-testid')==='user-message';const txt=extract(m);if(txt&amp;&amp;!isGhost(txt))out+=`**${isUser?'Human':'Grok'}**\n\n${txt}${SEP}`;});}else{const msgs=document.querySelectorAll('[data-message-author-role], [data-testid*=&quot;message&quot;], [data-testid*=&quot;turn&quot;], .prose, .markdown, article[role=&quot;article&quot;], div[role=&quot;article&quot;]');if(msgs.length>0){msgs.forEach(m=>{const role=m.getAttribute('data-message-author-role')||m.getAttribute('data-testid')||'';const txt=extract(m);if(txt&amp;&amp;!isGhost(txt)){const label=role.includes('user')||role.includes('human')?'Human':role.includes('assistant')||role.includes('model')?'Assistant':'Message';out+=`**${label}**\n\n${txt}${SEP}`;}})}else{out=clean(document.body.innerText);}}out=out.replace(/---\s*$/,'').trim();if(out){await navigator.clipboard.writeText(out);const t=document.title;document.title=&quot;✓ Copied&quot;;setTimeout(()=>document.title=t,1500);}})();">bttn</a>
+    <div class="bookmarks-bar">&#128278; Bookmarks bar &nbsp;|&nbsp; <span>bttn</span></div>
+  </div>
+
+  <p class="manual">
+    Prefer to install manually? See the <a href="https://github.com/edgeof8/bttn#install-10-seconds">README</a>.
+  </p>
+
+</body>
+</html>
