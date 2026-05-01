@@ -3,7 +3,7 @@
 **One bookmarklet. Your full AI conversation on the clipboard as clean Markdown.**  
 No extensions. No accounts. No bullshit.
 
-Works on **Claude.ai**, **Google AI Studio**, **ChatGPT**, and **Grok**.
+Works on **Claude.ai**, **Google AI Studio**, **ChatGPT**, and **Grok** — with a best-effort fallback for any other chatbot site.
 
 ---
 
@@ -49,6 +49,7 @@ The browser tab title will flash `✓ Copied` for 1.5 seconds.
 | **Google AI Studio** | Initial prompt (Monaco) + all turns (thoughts stripped) |
 | **ChatGPT**       | All human + assistant turns (o1 reasoning stripped)   |
 | **Grok**          | All human + Grok turns (thinking blocks stripped)     |
+| **Any other site** | Best-effort: common message selectors, falls back to full page text |
 
 Platform is detected automatically. No configuration needed.
 
@@ -216,6 +217,7 @@ The response here, with **bold**, `inline code`, and
 
 ## Changelog
 
+- **v0.6** — Generic fallback: tries common chatbot selectors on any site, falls back to full page text
 - **v0.5** — Grok support (`grok.com` / `x.com`); shared `extract()` function; `.thinking-container` stripping
 - **v0.4** — `<a>` tag fix (no more collapsed links); aggressive ghost-turn filtering
 - **v0.3** — Full Markdown engine (`nodeToMd`); language-aware code blocks; bold/italic/headers/lists; o1 thought stripping; tab title flash
