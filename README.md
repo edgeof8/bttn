@@ -62,6 +62,129 @@ javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out=
 
 ---
 
+## Source
+
+```javascript
+(async () => {
+  const SEP = "\n\n---\n\n";
+  const h = location.hostname;
+  let out = "";
+
+  function nodeToMd(el) {
+    let t = "";
+    el.childNodes.forEach(n => {
+      if (n.nodeType === 3) { t += n.textContent; return; }
+      if (n.nodeType !== 1) return;
+      const tag = n.tagName;
+      if (n.closest('[data-testid="thought-block"],.thoughts-container,.model-thoughts,.thinking-container')) return;
+      if (tag === "BR") { t += "\n"; return; }
+      if (tag === "A") { t += " " + nodeToMd(n).trim() + " "; return; }
+      if (tag === "PRE") {
+        const code = n.querySelector("code");
+        const lang = (code?.className || "").match(/language-(\w+)/)?.[1] || "";
+        t += "\n```" + lang + "\n" + (code || n).innerText.trim() + "\n```\n";
+        return;
+      }
+      if (tag === "CODE" && n.parentElement?.tagName !== "PRE") { t += "`" + n.innerText + "`"; return; }
+      if (tag === "STRONG" || tag === "B") { t += "**" + nodeToMd(n) + "**"; return; }
+      if (tag === "EM" || tag === "I") { t += "*" + nodeToMd(n) + "*"; return; }
+      if (["H1", "H2", "H3", "H4"].includes(tag)) {
+        const lvl = "#".repeat(parseInt(tag[1]));
+        t += "\n" + lvl + " " + nodeToMd(n).trim() + "\n";
+        return;
+      }
+      if (tag === "LI") { t += "\n- " + nodeToMd(n).trim(); return; }
+      if (tag === "UL" || tag === "OL") { t += "\n" + nodeToMd(n) + "\n"; return; }
+      if (["P", "DIV", "TR"].includes(tag)) {
+        const inner = nodeToMd(n).trim();
+        if (inner) t += "\n" + inner + "\n";
+        return;
+      }
+      t += nodeToMd(n);
+    });
+    return t;
+  }
+
+  function clean(txt) {
+    return txt.replace(/\n{3,}/g, "\n\n").replace(/\s{2,}/g, " ").trim();
+  }
+
+  function isGhost(txt) {
+    return /^\s*(Human|Model|Assistant|User)?\s*\d*:?\d*\s*(AM|PM)?\s*$/.test(txt.trim());
+  }
+
+  function extract(el) {
+    const cl = el.cloneNode(true);
+    cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*="thought"],[class*="expand"],.mat-expansion-panel,[data-testid="thought-block"]')
+      .forEach(e => e.remove());
+    return clean(nodeToMd(cl));
+  }
+
+  if (h.includes("claude.ai")) {
+    document.querySelectorAll('[data-test-render-count]').forEach(t => {
+      const u = t.querySelector('[data-testid="user-message"]');
+      const a = t.querySelector('.font-claude-response');
+      if (u) { const txt = extract(u); if (txt && !isGhost(txt)) out += "**Human**\n\n" + txt + SEP; }
+      if (a) { const txt = extract(a); if (txt && !isGhost(txt)) out += "**Claude**\n\n" + txt + SEP; }
+    });
+  } else if (h.includes("aistudio.google")) {
+    const sc = document.querySelector('[data-autoscroll-container]') || document.documentElement;
+    const sv = sc.scrollTop;
+    sc.scrollTop = 0;
+    await new Promise(r => setTimeout(r, 500));
+    const mc = document.querySelector('ms-prompt-editor .view-lines');
+    if (mc) { const t = mc.innerText.trim(); if (t) out += "**Initial Prompt**\n\n" + t + SEP; }
+    sc.scrollTop = sv;
+    document.querySelectorAll('ms-chat-turn').forEach(t => {
+      const isUser = !!t.querySelector('.user-prompt-container');
+      const tc = t.querySelector('.turn-content');
+      if (tc) {
+        const txt = extract(tc).replace(/^(Human|Model)\s+\d+:\d+\s*(AM|PM)?\s*\n?/, '').trim();
+        if (txt && !isGhost(txt)) out += `**${isUser ? 'Human' : 'Model'}**\n\n${txt}${SEP}`;
+      }
+    });
+  } else if (h.includes("chatgpt.com") || h.includes("chat.openai")) {
+    document.querySelectorAll('div[data-message-author-role]').forEach(m => {
+      const role = m.getAttribute('data-message-author-role');
+      const txt = extract(m);
+      if (txt && !isGhost(txt)) out += `**${role === 'user' ? 'Human' : 'Assistant'}**\n\n${txt}${SEP}`;
+    });
+  } else if (h.includes("grok.com") || h.includes("x.com")) {
+    document.querySelectorAll('[data-testid="user-message"],[data-testid="assistant-message"]').forEach(m => {
+      const isUser = m.getAttribute('data-testid') === 'user-message';
+      const txt = extract(m);
+      if (txt && !isGhost(txt)) out += `**${isUser ? 'Human' : 'Grok'}**\n\n${txt}${SEP}`;
+    });
+  } else {
+    const msgs = document.querySelectorAll('[data-message-author-role], [data-testid*="message"], [data-testid*="turn"], .prose, .markdown, article[role="article"], div[role="article"]');
+    if (msgs.length > 0) {
+      msgs.forEach(m => {
+        const role = m.getAttribute('data-message-author-role') || m.getAttribute('data-testid') || '';
+        const txt = extract(m);
+        if (txt && !isGhost(txt)) {
+          const label = role.includes('user') || role.includes('human') ? 'Human'
+            : role.includes('assistant') || role.includes('model') ? 'Assistant'
+            : 'Message';
+          out += `**${label}**\n\n${txt}${SEP}`;
+        }
+      });
+    } else {
+      out = clean(document.body.innerText);
+    }
+  }
+
+  out = out.replace(/---\s*$/, '').trim();
+  if (out) {
+    await navigator.clipboard.writeText(out);
+    const t = document.title;
+    document.title = "✓ Copied";
+    setTimeout(() => document.title = t, 1500);
+  }
+})();
+```
+
+---
+
 ## Output Format
 
 Valid Markdown ready for Obsidian, Notion, VS Code, or anywhere else.
