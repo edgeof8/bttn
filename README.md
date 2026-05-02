@@ -51,7 +51,6 @@ The browser tab title will flash `✓ Copied` for 1.5 seconds.
 | **Google AI Studio** | Initial prompt (Monaco) + all turns (thoughts stripped) |
 | **ChatGPT**       | All human + assistant turns (o1 reasoning stripped)   |
 | **Grok**          | All human + Grok turns (thinking blocks stripped)     |
-| **Perplexity**    | Works via generic fallback (prose/markdown selectors)  |
 | **Any other site** | Best-effort: common message selectors, falls back to full page text |
 
 Platform is detected automatically. No configuration needed.
