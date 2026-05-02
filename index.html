@@ -19,20 +19,37 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 2rem;
-      padding: 2rem;
+      gap: 3rem;
+      padding: 4rem 2rem 5rem;
       text-align: center;
     }
 
-    .brand { font-size: 2.75rem; font-weight: 700; letter-spacing: -0.04em; }
+    /* ── Hero ──────────────────────────────────────────────── */
+
+    .hero { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+
+    .brand {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      color: #3fb950;
+      text-shadow: 0 0 60px rgba(63, 185, 80, 0.35);
+    }
 
     .tagline {
-      color: #8b949e;
-      font-size: 1.05rem;
-      max-width: 400px;
-      line-height: 1.6;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #e6edf3;
+      max-width: 480px;
+      line-height: 1.5;
     }
+
+    .sub-tagline {
+      color: #6e7681;
+      font-size: 0.92rem;
+    }
+
+    /* ── Platform badges ───────────────────────────────────── */
 
     .platforms {
       display: flex;
@@ -44,15 +61,137 @@
     .platform-badge {
       display: inline-flex;
       align-items: center;
-      padding: 0.3rem 0.75rem;
+      padding: 0.3rem 0.8rem;
       border-radius: 99px;
       font-size: 0.78rem;
-      font-weight: 500;
-      border: 1px solid #30363d;
-      color: #8b949e;
-      background: #161b22;
+      font-weight: 600;
+      border: 1px solid;
       letter-spacing: 0.01em;
     }
+
+    .platform-badge.claude   { color: #d97706; border-color: rgba(217,119,6,0.6);   background: rgba(217,119,6,0.08); }
+    .platform-badge.chatgpt  { color: #10a37f; border-color: rgba(16,163,127,0.6);  background: rgba(16,163,127,0.08); }
+    .platform-badge.grok     { color: #a78bfa; border-color: rgba(167,139,250,0.6); background: rgba(167,139,250,0.08); }
+    .platform-badge.aistudio { color: #60a5fa; border-color: rgba(96,165,250,0.6);  background: rgba(96,165,250,0.08); }
+
+    /* ── Before / After ────────────────────────────────────── */
+
+    .ba-section {
+      width: 100%;
+      max-width: 820px;
+      text-align: left;
+    }
+
+    .ba-eyebrow {
+      text-align: center;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #484f58;
+      margin-bottom: 1.25rem;
+    }
+
+    .ba-grid {
+      display: grid;
+      grid-template-columns: 1fr 3rem 1fr;
+      align-items: stretch;
+    }
+
+    .ba-panel {
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ba-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.85rem;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .before-header { color: #6e7681; }
+    .after-header  { color: #3fb950; }
+
+    .ba-panel-header .pill {
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+
+    .before-header .pill { background: rgba(248,81,73,0.15); color: #f85149; }
+    .after-header  .pill { background: rgba(63,185,80,0.15);  color: #3fb950; }
+
+    .ba-content {
+      padding: 1rem;
+      font-family: "SF Mono", "Cascadia Code", "Fira Mono", monospace;
+      font-size: 0.73rem;
+      line-height: 1.7;
+      background: #0d1117;
+      flex: 1;
+    }
+
+    /* Before panel — chat UI noise */
+    .chat-turn   { margin-bottom: 0.85rem; }
+    .chat-meta   { margin-bottom: 0.3rem; }
+    .chat-name   { font-weight: 700; color: #e6edf3; font-family: -apple-system, sans-serif; font-size: 0.78rem; }
+    .chat-time   { color: #484f58; font-size: 0.68rem; margin-left: 0.4rem; font-family: -apple-system, sans-serif; }
+    .chat-text   { color: #8b949e; }
+    .chat-pre    {
+      background: #161b22; border: 1px solid #30363d; border-radius: 5px;
+      padding: 0.55rem 0.7rem; color: #79c0ff; margin: 0.4rem 0;
+      white-space: pre; overflow: hidden;
+    }
+    .chat-btns   { margin: 0.25rem 0 0.4rem; }
+    .chat-btn    {
+      display: inline-block; background: #21262d; border: 1px solid #30363d;
+      border-radius: 4px; padding: 0.12rem 0.5rem; font-size: 0.65rem;
+      color: #6e7681; margin-right: 0.3rem;
+      font-family: -apple-system, sans-serif;
+    }
+
+    /* After panel — clean Markdown */
+    .md-turn  { margin-bottom: 0.6rem; }
+    .md-bold  { color: #e6edf3; font-weight: 700; }
+    .md-text  { color: #8b949e; }
+    .md-sep   { color: #30363d; margin: 0.5rem 0; }
+    .md-pre   {
+      background: #161b22; border: 1px solid #30363d; border-radius: 5px;
+      padding: 0.55rem 0.7rem; color: #79c0ff; margin: 0.4rem 0;
+      white-space: pre; overflow: hidden;
+    }
+    .md-lang  { color: #6e7681; }
+
+    /* Arrow between panels */
+    .ba-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #3fb950;
+      font-size: 1.3rem;
+    }
+
+    @media (max-width: 620px) {
+      .ba-grid {
+        grid-template-columns: 1fr;
+      }
+      .ba-arrow {
+        padding: 0.25rem 0;
+        transform: rotate(90deg);
+      }
+    }
+
+    /* ── Install ───────────────────────────────────────────── */
 
     .install {
       display: flex;
@@ -85,16 +224,12 @@
 
     .bookmarklet:hover {
       background: #2ea043;
-      box-shadow: 0 0 20px rgba(46, 160, 67, 0.3);
+      box-shadow: 0 0 28px rgba(46, 160, 67, 0.4);
     }
 
     .bookmarklet:active { cursor: grabbing; transform: scale(0.97); }
 
-    .drag-hint {
-      font-size: 0.78rem;
-      color: #484f58;
-      margin-top: -0.25rem;
-    }
+    .drag-hint { font-size: 0.78rem; color: #484f58; margin-top: -0.25rem; }
 
     .arrow {
       font-size: 1.4rem;
@@ -129,17 +264,7 @@
       font-weight: 600;
     }
 
-    .steps {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      color: #6e7681;
-      font-size: 0.85rem;
-      max-width: 300px;
-    }
-
-    .steps .step { display: flex; align-items: baseline; gap: 0.5rem; text-align: left; }
-    .steps .num { color: #484f58; font-size: 0.75rem; min-width: 1rem; }
+    /* ── Divider / copy fallback ───────────────────────────── */
 
     .divider {
       display: flex;
@@ -171,6 +296,8 @@
     .copy-btn:hover { color: #e6edf3; border-color: #8b949e; }
     .copy-btn.copied { color: #3fb950; border-color: #3fb950; }
 
+    /* ── Footer ────────────────────────────────────────────── */
+
     .footer { font-size: 0.82rem; color: #484f58; }
     .footer a { color: #58a6ff; text-decoration: none; }
     .footer a:hover { text-decoration: underline; }
@@ -178,23 +305,102 @@
 </head>
 <body>
 
-  <div class="brand">bttn</div>
-
-  <p class="tagline">Copies your full AI conversation to the clipboard as clean Markdown — one click, no setup.</p>
-
-  <div class="platforms">
-    <span class="platform-badge">Claude</span>
-    <span class="platform-badge">ChatGPT</span>
-    <span class="platform-badge">Grok</span>
-    <span class="platform-badge">AI Studio</span>
+  <!-- Hero -->
+  <div class="hero">
+    <div class="brand">bttn</div>
+    <p class="tagline">Copy any AI conversation to your clipboard as clean&nbsp;Markdown.</p>
+    <p class="sub-tagline">One click. No extensions. No bullshit.</p>
   </div>
 
+  <!-- Platform badges -->
+  <div class="platforms">
+    <span class="platform-badge claude">Claude</span>
+    <span class="platform-badge chatgpt">ChatGPT</span>
+    <span class="platform-badge grok">Grok</span>
+    <span class="platform-badge aistudio">AI Studio</span>
+  </div>
+
+  <!-- Before / After -->
+  <div class="ba-section">
+    <div class="ba-eyebrow">What bttn does</div>
+    <div class="ba-grid">
+
+      <!-- Before: messy copy-paste -->
+      <div class="ba-panel">
+        <div class="ba-panel-header before-header">
+          <span>Without bttn</span>
+          <span class="pill">copy-paste</span>
+        </div>
+        <div class="ba-content">
+          <div class="chat-turn">
+            <div class="chat-meta">
+              <span class="chat-name">You</span>
+              <span class="chat-time">2:14 PM</span>
+            </div>
+            <div class="chat-text">explain merge sort briefly</div>
+          </div>
+          <div class="chat-turn">
+            <div class="chat-meta">
+              <span class="chat-name">Claude</span>
+              <span class="chat-time">2:14 PM</span>
+            </div>
+            <div class="chat-text">Merge sort splits the list in half, recursively sorts each half, then merges them in order.</div>
+            <pre class="chat-pre">def merge(left, right):
+    result = []
+    i = j = 0
+    while i &lt; len(left)
+        ...</pre>
+            <div class="chat-btns">
+              <span class="chat-btn">Copy code</span>
+              <span class="chat-btn">Expand</span>
+            </div>
+            <div class="chat-text">Time complexity: O(n&nbsp;log&nbsp;n).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="ba-arrow">&#8594;</div>
+
+      <!-- After: clean Markdown -->
+      <div class="ba-panel">
+        <div class="ba-panel-header after-header">
+          <span>With bttn</span>
+          <span class="pill">&#10003;&nbsp;clean</span>
+        </div>
+        <div class="ba-content">
+          <div class="md-turn">
+            <div class="md-bold">**Human**</div>
+            <div class="md-text">&nbsp;</div>
+            <div class="md-text">explain merge sort briefly</div>
+          </div>
+          <div class="md-sep">---</div>
+          <div class="md-turn">
+            <div class="md-bold">**Claude**</div>
+            <div class="md-text">&nbsp;</div>
+            <div class="md-text">Merge sort splits the list in half, recursively sorts each half, then merges them in order.</div>
+            <pre class="md-pre"><span class="md-lang">```python</span>
+def merge(left, right):
+    result = []
+    i = j = 0
+    while i &lt; len(left)
+        ...
+<span class="md-lang">```</span></pre>
+            <div class="md-text">Time complexity: O(n&nbsp;log&nbsp;n).</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Install -->
   <div class="install">
     <div class="label">drag this to your bookmarks bar</div>
     <a id="bttn" class="bookmarklet" href="#">bttn</a>
     <div class="arrow">&#8595;</div>
     <div class="bookmarks-bar">
-      &#128278; Bookmarks &nbsp;&nbsp; <span class="slot">bttn</span> &nbsp;&nbsp; ···
+      &#128278; Bookmarks &nbsp;&nbsp; <span class="slot">bttn</span> &nbsp;&nbsp; &#183;&#183;&#183;
     </div>
     <div class="drag-hint">then visit any AI chat and click it</div>
   </div>
@@ -204,7 +410,7 @@
   <button class="copy-btn" id="copy-btn">Copy code — paste as bookmark URL</button>
 
   <p class="footer">
-    <a href="https://github.com/edgeof8/bttn">GitHub</a> &nbsp;·&nbsp;
+    <a href="https://github.com/edgeof8/bttn">GitHub</a> &nbsp;&#183;&nbsp;
     <a href="https://github.com/edgeof8/bttn#install-10-seconds">install guide</a>
   </p>
 

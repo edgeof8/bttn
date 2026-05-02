@@ -1,16 +1,40 @@
+/**
+ * bttn — readable source
+ * https://github.com/edgeof8/bttn
+ *
+ * Copies your full AI conversation to the clipboard as clean Markdown.
+ * Runs as a browser bookmarklet — no extension, no accounts, no network calls.
+ *
+ * Supported: Claude.ai · ChatGPT · Google AI Studio · Grok
+ * Fallback: best-effort on any other chatbot site
+ *
+ * To rebuild the minified bookmarklet after editing:
+ *   1. Minify this file (e.g. https://toptal.com/developers/javascript-minifier)
+ *   2. Wrap the result: javascript:(<minified code>)();
+ *   3. Replace the content of <script id="bttn-code"> in index.html
+ *   4. Also update the `bookmarklet` file with the same string
+ */
+
 (async () => {
-  const SEP = "\n\n---\n\n";
+  const SEP = "\n\n---\n\n";         // separator between conversation turns
   const h = location.hostname;
   let out = "";
-  let seen = new Set();
+  let seen = new Set();              // dedup guard: prevents double-copies from virtualized lists
 
+  // Walks the DOM tree and returns Markdown-formatted text.
+  // Handles: links, fenced code blocks (with language tag), inline code, bold, italic,
+  //          headers, lists, tables, and generic block elements.
+  // Skips: thought/thinking blocks — reasoning is stripped before export on all platforms.
   function nodeToMd(el) {
     let t = "";
     el.childNodes.forEach(n => {
       if (n.nodeType === 3) { t += n.textContent; return; }
       if (n.nodeType !== 1) return;
       const tag = n.tagName;
+
+      // Skip reasoning/thinking blocks
       if (n.closest('[data-testid="thought-block"],.thoughts-container,.model-thoughts,.thinking-container,.o1-thinking,[class*="thought"]')) return;
+
       if (tag === "BR") { t += "\n"; return; }
       if (tag === "A") { t += `[${nodeToMd(n).trim()}](${n.href}) `; return; }
       if (tag === "PRE") {
@@ -51,24 +75,30 @@
     return t;
   }
 
+  // Collapses excess whitespace while preserving intentional line breaks
   function clean(txt) {
     return txt.replace(/\n{3,}/g, "\n\n").replace(/[^\S\n]{2,}/g, " ").trim();
   }
 
+  // Detects "ghost" turns — DOM elements that render only a speaker label or
+  // a timestamp (e.g. "Claude 12:34 PM"), which some platforms emit as separate nodes.
   function isGhost(txt) {
     return /^\s*(Human|Model|Assistant|User|Claude|Grok)?\s*\d*:?\d*\s*(AM|PM)?\s*$/i.test(txt.trim());
   }
 
+  // Clones a turn element, strips noise (thoughts, expand buttons, UI buttons),
+  // converts to Markdown, and deduplicates against previously seen turns.
   function extract(el) {
-    const cl = el.cloneNode(true);
+    const cl = el.cloneNode(true);   // clone so we can mutate without touching the live DOM
     cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*="thought"],[class*="expand"],.mat-expansion-panel,[data-testid="thought-block"],[data-testid*="thinking"],button')
       .forEach(e => e.remove());
     const txt = clean(nodeToMd(cl));
-    if (seen.has(txt)) return "";
+    if (seen.has(txt)) return "";    // skip duplicates (React virtual list double-renders)
     seen.add(txt);
     return txt;
   }
 
+  // Per-platform extraction logic. Add a new entry here to support a new site.
   const platformHandlers = {
     claude: {
       match: () => h.includes("claude.ai"),
@@ -79,6 +109,7 @@
           if (u) { const txt = extract(u); if (txt && !isGhost(txt)) out += "**Human**\n\n" + txt + SEP; }
           if (a) { const txt = extract(a); if (txt && !isGhost(txt)) out += "**Claude**\n\n" + txt + SEP; }
         });
+        // Grab any open Artifact from the sidebar
         const art = document.querySelector('[data-testid="artifact-content"] code,[class*="artifact"] pre code');
         if (art) out += `\n\n### Artifact\n\n\`\`\`\n${art.innerText.trim()}\n\`\`\`\n`;
       }
@@ -86,13 +117,14 @@
     aistudio: {
       match: () => h.includes("aistudio.google"),
       run: async () => {
+        // AI Studio uses virtual rendering: scroll to top to force the initial prompt into the DOM
         const sc = document.querySelector('[data-autoscroll-container]') || document.documentElement;
         const sv = sc.scrollTop;
         sc.scrollTop = 0;
         await new Promise(r => setTimeout(r, 500));
         const mc = document.querySelector('ms-prompt-editor .view-lines');
         if (mc) { const t = mc.innerText.trim(); if (t) out += "**Initial Prompt**\n\n" + t + SEP; }
-        sc.scrollTop = sv;
+        sc.scrollTop = sv;   // restore scroll position
         document.querySelectorAll('ms-chat-turn').forEach(t => {
           const isUser = !!t.querySelector('.user-prompt-container');
           const tc = t.querySelector('.turn-content');
@@ -125,6 +157,7 @@
     }
   };
 
+  // Try each platform handler; fall through to generic if none match
   let handled = false;
   for (const [, handler] of Object.entries(platformHandlers)) {
     if (handler.match()) {
@@ -135,6 +168,7 @@
   }
 
   if (!handled) {
+    // Generic fallback: try common chatbot message selectors, then full page text
     const msgs = document.querySelectorAll('[data-message-author-role],[data-testid*="message"],[data-testid*="turn"],.prose,.markdown,article[role="article"],div[role="article"],.chat-message,.message,.conversation-turn,[class*="message-content"]');
     if (msgs.length > 0) {
       msgs.forEach(m => {
