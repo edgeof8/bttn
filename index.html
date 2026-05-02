@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>bttn — install</title>
+  <title>bttn — copy AI chats as Markdown</title>
+  <meta name="description" content="One bookmarklet. Copies your full AI conversation to the clipboard as clean Markdown. Works with Claude, ChatGPT, Grok, and AI Studio.">
+  <meta property="og:title" content="bttn — copy AI chats as Markdown">
+  <meta property="og:description" content="One bookmarklet. Copies your full AI conversation to the clipboard as clean Markdown.">
+  <meta property="og:url" content="https://edgeof8.github.io/bttn/">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -16,170 +20,57 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 2.5rem;
+      gap: 2rem;
       padding: 2rem;
       text-align: center;
     }
 
-    h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .brand { font-size: 2.75rem; font-weight: 700; letter-spacing: -0.04em; }
 
-    p {
+    .tagline {
       color: #8b949e;
       font-size: 1.05rem;
-      max-width: 440px;
+      max-width: 400px;
       line-height: 1.6;
     }
 
-    .label {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #8b949e;
-    }
-
-    .bookmarklet {
-      display: inline-block;
-      padding: 0.75rem 1.75rem;
-      background: #238636;
-      color: #ffffff;
-      font-size: 1.1rem;
-      font-weight: 600;
-      border-radius: 8px;
-      text-decoration: none;
-      border: 1px solid #2ea043;
-      cursor: grab;
-      user-select: none;
-      transition: background 0.15s, transform 0.1s;
-    }
-
-    .bookmarklet:hover { background: #2ea043; }
-    .bookmarklet:active { cursor: grabbing; transform: scale(0.97); }
-
-    .arrow {
-      font-size: 1.5rem;
-      animation: bounce 1.4s ease-in-out infinite;
-    }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(-6px); }
-    }
-
-    .bookmarks-bar {
+    .platforms {
       display: flex;
-      align-items: center;
       gap: 0.5rem;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 0.5rem 1rem;
-      font-size: 0.85rem;
-      color: #8b949e;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
-    .bookmarks-bar span { color: #e6edf3; }
-
-    .divider {
-      display: flex;
+    .platform-badge {
+      display: inline-flex;
       align-items: center;
-      gap: 1rem;
-      width: 100%;
-      max-width: 340px;
-      color: #8b949e;
-      font-size: 0.8rem;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: '';
-      flex: 1;
-      border-top: 1px solid #30363d;
-    }
-
-    .copy-btn {
-      padding: 0.6rem 1.4rem;
-      background: transparent;
-      color: #8b949e;
-      font-size: 0.9rem;
-      border-radius: 8px;
+      padding: 0.3rem 0.75rem;
+      border-radius: 99px;
+      font-size: 0.78rem;
+      font-weight: 500;
       border: 1px solid #30363d;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
+      color: #8b949e;
+      background: #161b22;
+      letter-spacing: 0.01em;
     }
 
-    .copy-btn:hover { color: #e6edf3; border-color: #8b949e; }
-    .copy-btn.copied { color: #3fb950; border-color: #3fb950; }
-
-    .manual { font-size: 0.85rem; color: #8b949e; }
-    .manual a { color: #58a6ff; text-decoration: none; }
-    .manual a:hover { text-decoration: underline; }
-  </style>
-</head>
-<body>
-
-  <h1>bttn</h1>
-  <p>One bookmarklet. Your full AI conversation on the clipboard as clean Markdown.</p>
-
-  <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-    <div class="label">drag this to your bookmarks bar</div>
-    <div class="arrow">&#8595;</div>
-    <a id="bttn" class="bookmarklet" href="#">bttn</a>
-    <div class="bookmarks-bar">&#128278; Bookmarks bar &nbsp;|&nbsp; <span>bttn</span></div>
-  </div>
-
-  <div class="divider">can't drag?</div>
-
-  <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem">
-    <button class="copy-btn" id="copy-btn">Copy code — paste as bookmark URL</button>
-  </div>
-
-  <p class="manual">
-    See the <a href="https://github.com/edgeof8/bttn#install-10-seconds">README</a> for manual install instructions.
-  </p>
-
-  <!-- bookmarklet source — single source of truth for both drag and copy -->
-  <script id="bttn-code" type="text/plain">javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out="";let seen=new Set();function nodeToMd(el){let t="";el.childNodes.forEach(n=>{if(n.nodeType===3){t+=n.textContent;return;}if(n.nodeType!==1)return;const tag=n.tagName;if(n.closest('[data-testid="thought-block"],.thoughts-container,.model-thoughts,.thinking-container,.o1-thinking,[class*="thought"]'))return;if(tag==="BR"){t+="\n";return;}if(tag==="A"){t+=`[${nodeToMd(n).trim()}](${n.href}) `;return;}if(tag==="PRE"){const code=n.querySelector("code");const lang=(code?.className||"").match(/language-(\w+)/)?.[1]||"";t+="\n```"+lang+"\n"+(code||n).innerText.trim()+"\n```\n";return;}if(tag==="CODE"&&n.parentElement?.tagName!=="PRE"){t+="`"+n.innerText+"`";return;}if(tag==="STRONG"||tag==="B"){t+="**"+nodeToMd(n)+"**";return;}if(tag==="EM"||tag==="I"){t+="*"+nodeToMd(n)+"*";return;}if(["H1","H2","H3","H4"].includes(tag)){const lvl="#".repeat(parseInt(tag[1]));t+="\n"+lvl+" "+nodeToMd(n).trim()+"\n";return;}if(tag==="LI"){t+="\n- "+nodeToMd(n).trim();return;}if(tag==="UL"||tag==="OL"){t+="\n"+nodeToMd(n)+"\n";return;}if(tag==="TABLE"){Array.from(n.querySelectorAll('tr')).forEach(row=>{const cells=Array.from(row.querySelectorAll('th,td')).map(c=>nodeToMd(c).trim().replace(/\|/g,'\\|'));if(!cells.length)return;t+="\n| "+cells.join(' | ')+" |";if(row.querySelectorAll('th').length>0)t+="\n| "+cells.map(()=>'---').join(' | ')+" |";});t+='\n';return;}if(["P","DIV","SECTION"].includes(tag)){const inner=nodeToMd(n).trim();if(inner)t+="\n"+inner+"\n";return;}t+=nodeToMd(n);});return t;}function clean(txt){return txt.replace(/\n{3,}/g,"\n\n").replace(/[^\S\n]{2,}/g," ").trim();}function isGhost(txt){return /^\s*(Human|Model|Assistant|User|Claude|Grok)?\s*\d*:?\d*\s*(AM|PM)?\s*$/i.test(txt.trim());}function extract(el){const cl=el.cloneNode(true);cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*="thought"],[class*="expand"],.mat-expansion-panel,[data-testid="thought-block"],[data-testid*="thinking"],button').forEach(e=>e.remove());const txt=clean(nodeToMd(cl));if(seen.has(txt))return "";seen.add(txt);return txt;}const platformHandlers={claude:{match:()=>h.includes("claude.ai"),run:()=>{document.querySelectorAll('[data-test-render-count]').forEach(t=>{const u=t.querySelector('[data-testid="user-message"]');const a=t.querySelector('.font-claude-response,[data-testid="assistant-message"]');if(u){const txt=extract(u);if(txt&&!isGhost(txt))out+="**Human**\n\n"+txt+SEP;}if(a){const txt=extract(a);if(txt&&!isGhost(txt))out+="**Claude**\n\n"+txt+SEP;}});const art=document.querySelector('[data-testid="artifact-content"] code,[class*="artifact"] pre code');if(art)out+=`\n\n### Artifact\n\n\`\`\`\n${art.innerText.trim()}\n\`\`\`\n`;}},aistudio:{match:()=>h.includes("aistudio.google"),run:async()=>{const sc=document.querySelector('[data-autoscroll-container]')||document.documentElement;const sv=sc.scrollTop;sc.scrollTop=0;await new Promise(r=>setTimeout(r,500));const mc=document.querySelector('ms-prompt-editor .view-lines');if(mc){const t=mc.innerText.trim();if(t)out+="**Initial Prompt**\n\n"+t+SEP;}sc.scrollTop=sv;document.querySelectorAll('ms-chat-turn').forEach(t=>{const isUser=!!t.querySelector('.user-prompt-container');const tc=t.querySelector('.turn-content');if(tc){let txt=extract(tc).replace(/^(Human|Model|User)\s+\d+:\d+\s*(AM|PM)?\s*\n?/i,'').trim();if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Model'}**\n\n${txt}${SEP}`;}});}},chatgpt:{match:()=>h.includes("chatgpt.com")||h.includes("chat.openai"),run:()=>{document.querySelectorAll('div[data-message-author-role]').forEach(m=>{const role=m.getAttribute('data-message-author-role');const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${role==='user'?'Human':'Assistant'}**\n\n${txt}${SEP}`;});}},grok:{match:()=>h.includes("grok.com")||h.includes("x.com"),run:()=>{document.querySelectorAll('[data-testid="user-message"],[data-testid="assistant-message"]').forEach(m=>{const isUser=m.getAttribute('data-testid')==='user-message';const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Grok'}**\n\n${txt}${SEP}`;});}}};let handled=false;for(const[,handler]of Object.entries(platformHandlers)){if(handler.match()){await handler.run();handled=true;break;}}if(!handled){const msgs=document.querySelectorAll('[data-message-author-role],[data-testid*="message"],[data-testid*="turn"],.prose,.markdown,article[role="article"],div[role="article"],.chat-message,.message,.conversation-turn,[class*="message-content"]');if(msgs.length>0){msgs.forEach(m=>{const role=m.getAttribute('data-message-author-role')||m.getAttribute('data-testid')||'';const txt=extract(m);if(txt&&!isGhost(txt)){const label=role.includes('user')||role.includes('human')?'Human':(role.includes('assistant')||role.includes('model')||role.includes('claude')||role.includes('grok'))?'Assistant':'Message';out+=`**${label}**\n\n${txt}${SEP}`;}})}else{out=clean(document.body.innerText);}}out=out.replace(/---\s*$/,'').trim();const t=document.title;if(out){await navigator.clipboard.writeText(out);document.title="✓ Copied";}else{document.title="Nothing to copy";}setTimeout(()=>document.title=t,1500);})();CTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>bttn — install</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0d1117;
-      color: #e6edf3;
-      min-height: 100vh;
+    .install {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 2.5rem;
-      padding: 2rem;
-      text-align: center;
-    }
-
-    h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; }
-
-    p {
-      color: #8b949e;
-      font-size: 1.05rem;
-      max-width: 440px;
-      line-height: 1.6;
+      gap: 0.9rem;
     }
 
     .label {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: #8b949e;
+      color: #6e7681;
     }
 
     .bookmarklet {
       display: inline-block;
-      padding: 0.75rem 1.75rem;
+      padding: 0.85rem 2.25rem;
       background: #238636;
       color: #ffffff;
       font-size: 1.1rem;
@@ -189,20 +80,31 @@
       border: 1px solid #2ea043;
       cursor: grab;
       user-select: none;
-      transition: background 0.15s, transform 0.1s;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
     }
 
-    .bookmarklet:hover { background: #2ea043; }
+    .bookmarklet:hover {
+      background: #2ea043;
+      box-shadow: 0 0 20px rgba(46, 160, 67, 0.3);
+    }
+
     .bookmarklet:active { cursor: grabbing; transform: scale(0.97); }
 
+    .drag-hint {
+      font-size: 0.78rem;
+      color: #484f58;
+      margin-top: -0.25rem;
+    }
+
     .arrow {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       animation: bounce 1.4s ease-in-out infinite;
+      color: #484f58;
     }
 
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(-6px); }
+      50%       { transform: translateY(-5px); }
     }
 
     .bookmarks-bar {
@@ -212,35 +114,54 @@
       background: #161b22;
       border: 1px solid #30363d;
       border-radius: 6px;
-      padding: 0.5rem 1rem;
-      font-size: 0.85rem;
-      color: #8b949e;
+      padding: 0.45rem 1rem;
+      font-size: 0.82rem;
+      color: #484f58;
     }
 
-    .bookmarks-bar span { color: #e6edf3; }
+    .bookmarks-bar .slot {
+      color: #e6edf3;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 0.15rem 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      color: #6e7681;
+      font-size: 0.85rem;
+      max-width: 300px;
+    }
+
+    .steps .step { display: flex; align-items: baseline; gap: 0.5rem; text-align: left; }
+    .steps .num { color: #484f58; font-size: 0.75rem; min-width: 1rem; }
 
     .divider {
       display: flex;
       align-items: center;
       gap: 1rem;
       width: 100%;
-      max-width: 340px;
-      color: #8b949e;
-      font-size: 0.8rem;
+      max-width: 320px;
+      color: #484f58;
+      font-size: 0.78rem;
     }
 
-    .divider::before,
-    .divider::after {
+    .divider::before, .divider::after {
       content: '';
       flex: 1;
-      border-top: 1px solid #30363d;
+      border-top: 1px solid #21262d;
     }
 
     .copy-btn {
-      padding: 0.6rem 1.4rem;
+      padding: 0.55rem 1.25rem;
       background: transparent;
       color: #8b949e;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       border-radius: 8px;
       border: 1px solid #30363d;
       cursor: pointer;
@@ -250,35 +171,45 @@
     .copy-btn:hover { color: #e6edf3; border-color: #8b949e; }
     .copy-btn.copied { color: #3fb950; border-color: #3fb950; }
 
-    .manual { font-size: 0.85rem; color: #8b949e; }
-    .manual a { color: #58a6ff; text-decoration: none; }
-    .manual a:hover { text-decoration: underline; }
+    .footer { font-size: 0.82rem; color: #484f58; }
+    .footer a { color: #58a6ff; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
-  <h1>bttn</h1>
-  <p>One bookmarklet. Your full AI conversation on the clipboard as clean Markdown.</p>
+  <div class="brand">bttn</div>
 
-  <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
+  <p class="tagline">Copies your full AI conversation to the clipboard as clean Markdown — one click, no setup.</p>
+
+  <div class="platforms">
+    <span class="platform-badge">Claude</span>
+    <span class="platform-badge">ChatGPT</span>
+    <span class="platform-badge">Grok</span>
+    <span class="platform-badge">AI Studio</span>
+  </div>
+
+  <div class="install">
     <div class="label">drag this to your bookmarks bar</div>
-    <div class="arrow">&#8595;</div>
     <a id="bttn" class="bookmarklet" href="#">bttn</a>
-    <div class="bookmarks-bar">&#128278; Bookmarks bar &nbsp;|&nbsp; <span>bttn</span></div>
+    <div class="arrow">&#8595;</div>
+    <div class="bookmarks-bar">
+      &#128278; Bookmarks &nbsp;&nbsp; <span class="slot">bttn</span> &nbsp;&nbsp; ···
+    </div>
+    <div class="drag-hint">then visit any AI chat and click it</div>
   </div>
 
   <div class="divider">can't drag?</div>
 
-  <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem">
-    <button class="copy-btn" id="copy-btn">Copy code — paste as bookmark URL</button>
-  </div>
+  <button class="copy-btn" id="copy-btn">Copy code — paste as bookmark URL</button>
 
-  <p class="manual">
-    See the <a href="https://github.com/edgeof8/bttn#install-10-seconds">README</a> for manual install instructions.
+  <p class="footer">
+    <a href="https://github.com/edgeof8/bttn">GitHub</a> &nbsp;·&nbsp;
+    <a href="https://github.com/edgeof8/bttn#install-10-seconds">install guide</a>
   </p>
 
   <!-- bookmarklet source — single source of truth for both drag and copy -->
-  <script id="bttn-code" type="text/plain">javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out="";function nodeToMd(el){let t="";el.childNodes.forEach(n=>{if(n.nodeType===3){t+=n.textContent;return;}if(n.nodeType!==1)return;const tag=n.tagName;if(n.closest('[data-testid="thought-block"],.thoughts-container,.model-thoughts,.thinking-container,.o1-thinking,[class*="thought"]'))return;if(tag==="BR"){t+="\n";return;}if(tag==="A"){t+=" "+nodeToMd(n).trim()+" ";return;}if(tag==="PRE"){const code=n.querySelector("code");const lang=(code?.className||"").match(/language-(\w+)/)?.[1]||"";t+="\n```"+lang+"\n"+(code||n).innerText.trim()+"\n```\n";return;}if(tag==="CODE"&&n.parentElement?.tagName!=="PRE"){t+="`"+n.innerText+"`";return;}if(tag==="STRONG"||tag==="B"){t+="**"+nodeToMd(n)+"**";return;}if(tag==="EM"||tag==="I"){t+="*"+nodeToMd(n)+"*";return;}if(["H1","H2","H3","H4"].includes(tag)){const lvl="#".repeat(parseInt(tag[1]));t+="\n"+lvl+" "+nodeToMd(n).trim()+"\n";return;}if(tag==="LI"){t+="\n- "+nodeToMd(n).trim();return;}if(tag==="UL"||tag==="OL"){t+="\n"+nodeToMd(n)+"\n";return;}if(["P","DIV","TR","SECTION"].includes(tag)){const inner=nodeToMd(n).trim();if(inner)t+="\n"+inner+"\n";return;}t+=nodeToMd(n);});return t;}function clean(txt){return txt.replace(/\n{3,}/g,"\n\n").replace(/[^\S\n]{2,}/g," ").trim();}function isGhost(txt){return /^\s*(Human|Model|Assistant|User|Claude|Grok)?\s*\d*:?\d*\s*(AM|PM)?\s*$/i.test(txt.trim());}function extract(el){const cl=el.cloneNode(true);cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*="thought"],[class*="expand"],.mat-expansion-panel,[data-testid="thought-block"],[data-testid*="thinking"]').forEach(e=>e.remove());return clean(nodeToMd(cl));}const platformHandlers={claude:{match:()=>h.includes("claude.ai"),run:()=>{document.querySelectorAll('[data-test-render-count]').forEach(t=>{const u=t.querySelector('[data-testid="user-message"]');const a=t.querySelector('.font-claude-response,[data-testid="assistant-message"]');if(u){const txt=extract(u);if(txt&&!isGhost(txt))out+="**Human**\n\n"+txt+SEP;}if(a){const txt=extract(a);if(txt&&!isGhost(txt))out+="**Claude**\n\n"+txt+SEP;}});}},aistudio:{match:()=>h.includes("aistudio.google"),run:async()=>{const sc=document.querySelector('[data-autoscroll-container]')||document.documentElement;const sv=sc.scrollTop;sc.scrollTop=0;await new Promise(r=>setTimeout(r,500));const mc=document.querySelector('ms-prompt-editor .view-lines');if(mc){const t=mc.innerText.trim();if(t)out+="**Initial Prompt**\n\n"+t+SEP;}sc.scrollTop=sv;document.querySelectorAll('ms-chat-turn').forEach(t=>{const isUser=!!t.querySelector('.user-prompt-container');const tc=t.querySelector('.turn-content');if(tc){let txt=extract(tc).replace(/^(Human|Model)\s+\d+:\d+\s*(AM|PM)?\s*\n?/i,'').trim();if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Model'}**\n\n${txt}${SEP}`;}});}},chatgpt:{match:()=>h.includes("chatgpt.com")||h.includes("chat.openai"),run:()=>{document.querySelectorAll('div[data-message-author-role]').forEach(m=>{const role=m.getAttribute('data-message-author-role');const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${role==='user'?'Human':'Assistant'}**\n\n${txt}${SEP}`;});}},grok:{match:()=>h.includes("grok.com")||h.includes("x.com"),run:()=>{document.querySelectorAll('[data-testid="user-message"],[data-testid="assistant-message"]').forEach(m=>{const isUser=m.getAttribute('data-testid')==='user-message';const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Grok'}**\n\n${txt}${SEP}`;});}}};let handled=false;for(const[,handler]of Object.entries(platformHandlers)){if(handler.match()){await handler.run();handled=true;break;}}if(!handled){const msgs=document.querySelectorAll('[data-message-author-role],[data-testid*="message"],[data-testid*="turn"],.prose,.markdown,article[role="article"],div[role="article"],.chat-message,.message,.conversation-turn');if(msgs.length>0){msgs.forEach(m=>{const role=m.getAttribute('data-message-author-role')||m.getAttribute('data-testid')||'';const txt=extract(m);if(txt&&!isGhost(txt)){const label=role.includes('user')||role.includes('human')?'Human':(role.includes('assistant')||role.includes('model')||role.includes('claude')||role.includes('grok'))?'Assistant':'Message';out+=`**${label}**\n\n${txt}${SEP}`;}})}else{out=clean(document.body.innerText);}}out=out.replace(/---\s*$/,'').trim();const t=document.title;if(out){await navigator.clipboard.writeText(out);document.title="✓ Copied";}else{document.title="Nothing to copy";}setTimeout(()=>document.title=t,1500);})();</script>
+  <script id="bttn-code" type="text/plain">javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out="";let seen=new Set();function nodeToMd(el){let t="";el.childNodes.forEach(n=>{if(n.nodeType===3){t+=n.textContent;return;}if(n.nodeType!==1)return;const tag=n.tagName;if(n.closest('[data-testid="thought-block"],.thoughts-container,.model-thoughts,.thinking-container,.o1-thinking,[class*="thought"]'))return;if(tag==="BR"){t+="\n";return;}if(tag==="A"){t+=`[${nodeToMd(n).trim()}](${n.href}) `;return;}if(tag==="PRE"){const code=n.querySelector("code");const lang=(code?.className||"").match(/language-(\w+)/)?.[1]||"";t+="\n```"+lang+"\n"+(code||n).innerText.trim()+"\n```\n";return;}if(tag==="CODE"&&n.parentElement?.tagName!=="PRE"){t+="`"+n.innerText+"`";return;}if(tag==="STRONG"||tag==="B"){t+="**"+nodeToMd(n)+"**";return;}if(tag==="EM"||tag==="I"){t+="*"+nodeToMd(n)+"*";return;}if(["H1","H2","H3","H4"].includes(tag)){const lvl="#".repeat(parseInt(tag[1]));t+="\n"+lvl+" "+nodeToMd(n).trim()+"\n";return;}if(tag==="LI"){t+="\n- "+nodeToMd(n).trim();return;}if(tag==="UL"||tag==="OL"){t+="\n"+nodeToMd(n)+"\n";return;}if(tag==="TABLE"){Array.from(n.querySelectorAll('tr')).forEach(row=>{const cells=Array.from(row.querySelectorAll('th,td')).map(c=>nodeToMd(c).trim().replace(/\|/g,'\\|'));if(!cells.length)return;t+="\n| "+cells.join(' | ')+" |";if(row.querySelectorAll('th').length>0)t+="\n| "+cells.map(()=>'---').join(' | ')+" |";});t+='\n';return;}if(["P","DIV","SECTION"].includes(tag)){const inner=nodeToMd(n).trim();if(inner)t+="\n"+inner+"\n";return;}t+=nodeToMd(n);});return t;}function clean(txt){return txt.replace(/\n{3,}/g,"\n\n").replace(/[^\S\n]{2,}/g," ").trim();}function isGhost(txt){return /^\s*(Human|Model|Assistant|User|Claude|Grok)?\s*\d*:?\d*\s*(AM|PM)?\s*$/i.test(txt.trim());}function extract(el){const cl=el.cloneNode(true);cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*="thought"],[class*="expand"],.mat-expansion-panel,[data-testid="thought-block"],[data-testid*="thinking"],button').forEach(e=>e.remove());const txt=clean(nodeToMd(cl));if(seen.has(txt))return "";seen.add(txt);return txt;}const platformHandlers={claude:{match:()=>h.includes("claude.ai"),run:()=>{document.querySelectorAll('[data-test-render-count]').forEach(t=>{const u=t.querySelector('[data-testid="user-message"]');const a=t.querySelector('.font-claude-response,[data-testid="assistant-message"]');if(u){const txt=extract(u);if(txt&&!isGhost(txt))out+="**Human**\n\n"+txt+SEP;}if(a){const txt=extract(a);if(txt&&!isGhost(txt))out+="**Claude**\n\n"+txt+SEP;}});const art=document.querySelector('[data-testid="artifact-content"] code,[class*="artifact"] pre code');if(art)out+=`\n\n### Artifact\n\n\`\`\`\n${art.innerText.trim()}\n\`\`\`\n`;}},aistudio:{match:()=>h.includes("aistudio.google"),run:async()=>{const sc=document.querySelector('[data-autoscroll-container]')||document.documentElement;const sv=sc.scrollTop;sc.scrollTop=0;await new Promise(r=>setTimeout(r,500));const mc=document.querySelector('ms-prompt-editor .view-lines');if(mc){const t=mc.innerText.trim();if(t)out+="**Initial Prompt**\n\n"+t+SEP;}sc.scrollTop=sv;document.querySelectorAll('ms-chat-turn').forEach(t=>{const isUser=!!t.querySelector('.user-prompt-container');const tc=t.querySelector('.turn-content');if(tc){let txt=extract(tc).replace(/^(Human|Model|User)\s+\d+:\d+\s*(AM|PM)?\s*\n?/i,'').trim();if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Model'}**\n\n${txt}${SEP}`;}});}},chatgpt:{match:()=>h.includes("chatgpt.com")||h.includes("chat.openai"),run:()=>{document.querySelectorAll('div[data-message-author-role]').forEach(m=>{const role=m.getAttribute('data-message-author-role');const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${role==='user'?'Human':'Assistant'}**\n\n${txt}${SEP}`;});}},grok:{match:()=>h.includes("grok.com")||h.includes("x.com"),run:()=>{document.querySelectorAll('[data-testid="user-message"],[data-testid="assistant-message"]').forEach(m=>{const isUser=m.getAttribute('data-testid')==='user-message';const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Grok'}**\n\n${txt}${SEP}`;});}}};let handled=false;for(const[,handler]of Object.entries(platformHandlers)){if(handler.match()){await handler.run();handled=true;break;}}if(!handled){const msgs=document.querySelectorAll('[data-message-author-role],[data-testid*="message"],[data-testid*="turn"],.prose,.markdown,article[role="article"],div[role="article"],.chat-message,.message,.conversation-turn,[class*="message-content"]');if(msgs.length>0){msgs.forEach(m=>{const role=m.getAttribute('data-message-author-role')||m.getAttribute('data-testid')||'';const txt=extract(m);if(txt&&!isGhost(txt)){const label=role.includes('user')||role.includes('human')?'Human':(role.includes('assistant')||role.includes('model')||role.includes('claude')||role.includes('grok'))?'Assistant':'Message';out+=`**${label}**\n\n${txt}${SEP}`;}})}else{out=clean(document.body.innerText);}}out=out.replace(/---\s*$/,'').trim();const t=document.title;if(out){await navigator.clipboard.writeText(out);document.title="✓ Copied";}else{document.title="Nothing to copy";}setTimeout(()=>document.title=t,1500);})();</script>
 
   <script>
     const code = document.getElementById('bttn-code').textContent.trim();
