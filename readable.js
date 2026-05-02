@@ -11,8 +11,6 @@
  * To rebuild the minified bookmarklet after editing:
  *   1. Minify this file (e.g. https://toptal.com/developers/javascript-minifier)
  *   2. Wrap the result: javascript:(<minified code>)();
- *   3. Replace the content of <script id="bttn-code"> in index.html
- *   4. Also update the `bookmarklet` file with the same string
  */
 
 (async () => {
