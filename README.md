@@ -1,7 +1,6 @@
 # bttn
 
 **One bookmarklet. Your full AI conversation on the clipboard as clean Markdown.**  
-No extensions. No accounts. No bullshit.
 
 Works on **Claude.ai**, **Google AI Studio**, **ChatGPT**, and **Grok** — with a best-effort fallback for any other chatbot site.
 
