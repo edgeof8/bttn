@@ -47,10 +47,11 @@ The browser tab title will flash `✓ Copied` for 1.5 seconds.
 
 | Platform          | What it captures                                      |
 |-------------------|-------------------------------------------------------|
-| **Claude.ai**     | All human + Claude turns                              |
+| **Claude.ai**     | All human + Claude turns; active Artifact (if sidebar open) |
 | **Google AI Studio** | Initial prompt (Monaco) + all turns (thoughts stripped) |
 | **ChatGPT**       | All human + assistant turns (o1 reasoning stripped)   |
 | **Grok**          | All human + Grok turns (thinking blocks stripped)     |
+| **Perplexity**    | Works via generic fallback (prose/markdown selectors)  |
 | **Any other site** | Best-effort: common message selectors, falls back to full page text |
 
 Platform is detected automatically. No configuration needed.
@@ -60,7 +61,7 @@ Platform is detected automatically. No configuration needed.
 ## The Bookmarklet (paste this as the URL)
 ```
 
-javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out="";function nodeToMd(el){let t="";el.childNodes.forEach(n=>{if(n.nodeType===3){t+=n.textContent;return;}if(n.nodeType!==1)return;const tag=n.tagName;if(n.closest('[data-testid="thought-block"],.thoughts-container,.model-thoughts,.thinking-container,.o1-thinking,[class*="thought"]'))return;if(tag==="BR"){t+="\n";return;}if(tag==="A"){t+=" "+nodeToMd(n).trim()+" ";return;}if(tag==="PRE"){const code=n.querySelector("code");const lang=(code?.className||"").match(/language-(\w+)/)?.[1]||"";t+="\n```"+lang+"\n"+(code||n).innerText.trim()+"\n```\n";return;}if(tag==="CODE"&&n.parentElement?.tagName!=="PRE"){t+="`"+n.innerText+"`";return;}if(tag==="STRONG"||tag==="B"){t+="**"+nodeToMd(n)+"**";return;}if(tag==="EM"||tag==="I"){t+="*"+nodeToMd(n)+"*";return;}if(["H1","H2","H3","H4"].includes(tag)){const lvl="#".repeat(parseInt(tag[1]));t+="\n"+lvl+" "+nodeToMd(n).trim()+"\n";return;}if(tag==="LI"){t+="\n- "+nodeToMd(n).trim();return;}if(tag==="UL"||tag==="OL"){t+="\n"+nodeToMd(n)+"\n";return;}if(["P","DIV","TR","SECTION"].includes(tag)){const inner=nodeToMd(n).trim();if(inner)t+="\n"+inner+"\n";return;}t+=nodeToMd(n);});return t;}function clean(txt){return txt.replace(/\n{3,}/g,"\n\n").replace(/\s{2,}/g," ").trim();}function isGhost(txt){return /^\s*(Human|Model|Assistant|User|Claude|Grok)?\s*\d*:?\d*\s*(AM|PM)?\s*$/i.test(txt.trim());}function extract(el){const cl=el.cloneNode(true);cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*="thought"],[class*="expand"],.mat-expansion-panel,[data-testid="thought-block"],[data-testid*="thinking"]').forEach(e=>e.remove());return clean(nodeToMd(cl));}const platformHandlers={claude:{match:()=>h.includes("claude.ai"),run:()=>{document.querySelectorAll('[data-test-render-count]').forEach(t=>{const u=t.querySelector('[data-testid="user-message"]');const a=t.querySelector('.font-claude-response,[data-testid="assistant-message"]');if(u){const txt=extract(u);if(txt&&!isGhost(txt))out+="**Human**\n\n"+txt+SEP;}if(a){const txt=extract(a);if(txt&&!isGhost(txt))out+="**Claude**\n\n"+txt+SEP;}});}},aistudio:{match:()=>h.includes("aistudio.google"),run:async()=>{const sc=document.querySelector('[data-autoscroll-container]')||document.documentElement;const sv=sc.scrollTop;sc.scrollTop=0;await new Promise(r=>setTimeout(r,500));const mc=document.querySelector('ms-prompt-editor .view-lines');if(mc){const t=mc.innerText.trim();if(t)out+="**Initial Prompt**\n\n"+t+SEP;}sc.scrollTop=sv;document.querySelectorAll('ms-chat-turn').forEach(t=>{const isUser=!!t.querySelector('.user-prompt-container');const tc=t.querySelector('.turn-content');if(tc){let txt=extract(tc).replace(/^(Human|Model)\s+\d+:\d+\s*(AM|PM)?\s*\n?/i,'').trim();if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Model'}**\n\n${txt}${SEP}`;}});}},chatgpt:{match:()=>h.includes("chatgpt.com")||h.includes("chat.openai"),run:()=>{document.querySelectorAll('div[data-message-author-role]').forEach(m=>{const role=m.getAttribute('data-message-author-role');const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${role==='user'?'Human':'Assistant'}**\n\n${txt}${SEP}`;});}},grok:{match:()=>h.includes("grok.com")||h.includes("x.com"),run:()=>{document.querySelectorAll('[data-testid="user-message"],[data-testid="assistant-message"]').forEach(m=>{const isUser=m.getAttribute('data-testid')==='user-message';const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Grok'}**\n\n${txt}${SEP}`;});}}};let handled=false;for(const[,handler]of Object.entries(platformHandlers)){if(handler.match()){await handler.run();handled=true;break;}}if(!handled){const msgs=document.querySelectorAll('[data-message-author-role],[data-testid*="message"],[data-testid*="turn"],.prose,.markdown,article[role="article"],div[role="article"],.chat-message,.message,.conversation-turn');if(msgs.length>0){msgs.forEach(m=>{const role=m.getAttribute('data-message-author-role')||m.getAttribute('data-testid')||'';const txt=extract(m);if(txt&&!isGhost(txt)){const label=role.includes('user')||role.includes('human')?'Human':(role.includes('assistant')||role.includes('model')||role.includes('claude')||role.includes('grok'))?'Assistant':'Message';out+=`**${label}**\n\n${txt}${SEP}`;}})}else{out=clean(document.body.innerText);}}out=out.replace(/---\s*$/,'').trim();const t=document.title;if(out){await navigator.clipboard.writeText(out);document.title="✓ Copied";}else{document.title="Nothing to copy";}setTimeout(()=>document.title=t,1500);})();
+javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out="";let seen=new Set();function nodeToMd(el){let t="";el.childNodes.forEach(n=>{if(n.nodeType===3){t+=n.textContent;return;}if(n.nodeType!==1)return;const tag=n.tagName;if(n.closest('[data-testid="thought-block"],.thoughts-container,.model-thoughts,.thinking-container,.o1-thinking,[class*="thought"]'))return;if(tag==="BR"){t+="\n";return;}if(tag==="A"){t+=`[${nodeToMd(n).trim()}](${n.href}) `;return;}if(tag==="PRE"){const code=n.querySelector("code");const lang=(code?.className||"").match(/language-(\w+)/)?.[1]||"";t+="\n```"+lang+"\n"+(code||n).innerText.trim()+"\n```\n";return;}if(tag==="CODE"&&n.parentElement?.tagName!=="PRE"){t+="`"+n.innerText+"`";return;}if(tag==="STRONG"||tag==="B"){t+="**"+nodeToMd(n)+"**";return;}if(tag==="EM"||tag==="I"){t+="*"+nodeToMd(n)+"*";return;}if(["H1","H2","H3","H4"].includes(tag)){const lvl="#".repeat(parseInt(tag[1]));t+="\n"+lvl+" "+nodeToMd(n).trim()+"\n";return;}if(tag==="LI"){t+="\n- "+nodeToMd(n).trim();return;}if(tag==="UL"||tag==="OL"){t+="\n"+nodeToMd(n)+"\n";return;}if(tag==="TABLE"){Array.from(n.querySelectorAll('tr')).forEach(row=>{const cells=Array.from(row.querySelectorAll('th,td')).map(c=>nodeToMd(c).trim().replace(/\|/g,'\\|'));if(!cells.length)return;t+="\n| "+cells.join(' | ')+" |";if(row.querySelectorAll('th').length>0)t+="\n| "+cells.map(()=>'---').join(' | ')+" |";});t+='\n';return;}if(["P","DIV","SECTION"].includes(tag)){const inner=nodeToMd(n).trim();if(inner)t+="\n"+inner+"\n";return;}t+=nodeToMd(n);});return t;}function clean(txt){return txt.replace(/\n{3,}/g,"\n\n").replace(/\s{2,}/g," ").trim();}function isGhost(txt){return /^\s*(Human|Model|Assistant|User|Claude|Grok)?\s*\d*:?\d*\s*(AM|PM)?\s*$/i.test(txt.trim());}function extract(el){const cl=el.cloneNode(true);cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*="thought"],[class*="expand"],.mat-expansion-panel,[data-testid="thought-block"],[data-testid*="thinking"],button').forEach(e=>e.remove());const txt=clean(nodeToMd(cl));if(seen.has(txt))return "";seen.add(txt);return txt;}const platformHandlers={claude:{match:()=>h.includes("claude.ai"),run:()=>{document.querySelectorAll('[data-test-render-count]').forEach(t=>{const u=t.querySelector('[data-testid="user-message"]');const a=t.querySelector('.font-claude-response,[data-testid="assistant-message"]');if(u){const txt=extract(u);if(txt&&!isGhost(txt))out+="**Human**\n\n"+txt+SEP;}if(a){const txt=extract(a);if(txt&&!isGhost(txt))out+="**Claude**\n\n"+txt+SEP;}});const art=document.querySelector('[data-testid="artifact-content"] code,[class*="artifact"] pre code');if(art)out+=`\n\n### Artifact\n\n\`\`\`\n${art.innerText.trim()}\n\`\`\`\n`;}},aistudio:{match:()=>h.includes("aistudio.google"),run:async()=>{const sc=document.querySelector('[data-autoscroll-container]')||document.documentElement;const sv=sc.scrollTop;sc.scrollTop=0;await new Promise(r=>setTimeout(r,500));const mc=document.querySelector('ms-prompt-editor .view-lines');if(mc){const t=mc.innerText.trim();if(t)out+="**Initial Prompt**\n\n"+t+SEP;}sc.scrollTop=sv;document.querySelectorAll('ms-chat-turn').forEach(t=>{const isUser=!!t.querySelector('.user-prompt-container');const tc=t.querySelector('.turn-content');if(tc){let txt=extract(tc).replace(/^(Human|Model)\s+\d+:\d+\s*(AM|PM)?\s*\n?/i,'').trim();if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Model'}**\n\n${txt}${SEP}`;}});}},chatgpt:{match:()=>h.includes("chatgpt.com")||h.includes("chat.openai"),run:()=>{document.querySelectorAll('div[data-message-author-role]').forEach(m=>{const role=m.getAttribute('data-message-author-role');const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${role==='user'?'Human':'Assistant'}**\n\n${txt}${SEP}`;});}},grok:{match:()=>h.includes("grok.com")||h.includes("x.com"),run:()=>{document.querySelectorAll('[data-testid="user-message"],[data-testid="assistant-message"]').forEach(m=>{const isUser=m.getAttribute('data-testid')==='user-message';const txt=extract(m);if(txt&&!isGhost(txt))out+=`**${isUser?'Human':'Grok'}**\n\n${txt}${SEP}`;});}}};let handled=false;for(const[,handler]of Object.entries(platformHandlers)){if(handler.match()){await handler.run();handled=true;break;}}if(!handled){const msgs=document.querySelectorAll('[data-message-author-role],[data-testid*="message"],[data-testid*="turn"],.prose,.markdown,article[role="article"],div[role="article"],.chat-message,.message,.conversation-turn,[class*="message-content"]');if(msgs.length>0){msgs.forEach(m=>{const role=m.getAttribute('data-message-author-role')||m.getAttribute('data-testid')||'';const txt=extract(m);if(txt&&!isGhost(txt)){const label=role.includes('user')||role.includes('human')?'Human':(role.includes('assistant')||role.includes('model')||role.includes('claude')||role.includes('grok'))?'Assistant':'Message';out+=`**${label}**\n\n${txt}${SEP}`;}})}else{out=clean(document.body.innerText);}}out=out.replace(/---\s*$/,'').trim();const t=document.title;if(out){await navigator.clipboard.writeText(out);document.title="✓ Copied";}else{document.title="Nothing to copy";}setTimeout(()=>document.title=t,1500);})();
 ```
 
 ---
@@ -72,6 +73,7 @@ javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out=
   const SEP = "\n\n---\n\n";
   const h = location.hostname;
   let out = "";
+  let seen = new Set();
 
   function nodeToMd(el) {
     let t = "";
@@ -81,7 +83,7 @@ javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out=
       const tag = n.tagName;
       if (n.closest('[data-testid="thought-block"],.thoughts-container,.model-thoughts,.thinking-container,.o1-thinking,[class*="thought"]')) return;
       if (tag === "BR") { t += "\n"; return; }
-      if (tag === "A") { t += " " + nodeToMd(n).trim() + " "; return; }
+      if (tag === "A") { t += `[${nodeToMd(n).trim()}](${n.href}) `; return; }
       if (tag === "PRE") {
         const code = n.querySelector("code");
         const lang = (code?.className || "").match(/language-(\w+)/)?.[1] || "";
@@ -98,7 +100,19 @@ javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out=
       }
       if (tag === "LI") { t += "\n- " + nodeToMd(n).trim(); return; }
       if (tag === "UL" || tag === "OL") { t += "\n" + nodeToMd(n) + "\n"; return; }
-      if (["P", "DIV", "TR", "SECTION"].includes(tag)) {
+      if (tag === "TABLE") {
+        Array.from(n.querySelectorAll('tr')).forEach(row => {
+          const cells = Array.from(row.querySelectorAll('th, td'))
+            .map(c => nodeToMd(c).trim().replace(/\|/g, '\\|'));
+          if (!cells.length) return;
+          t += `\n| ${cells.join(' | ')} |`;
+          if (row.querySelectorAll('th').length > 0)
+            t += `\n| ${cells.map(() => '---').join(' | ')} |`;
+        });
+        t += '\n';
+        return;
+      }
+      if (["P", "DIV", "SECTION"].includes(tag)) {
         const inner = nodeToMd(n).trim();
         if (inner) t += "\n" + inner + "\n";
         return;
@@ -118,9 +132,12 @@ javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out=
 
   function extract(el) {
     const cl = el.cloneNode(true);
-    cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*="thought"],[class*="expand"],.mat-expansion-panel,[data-testid="thought-block"],[data-testid*="thinking"]')
+    cl.querySelectorAll('.thinking-container,.thoughts-container,.model-thoughts,[class*="thought"],[class*="expand"],.mat-expansion-panel,[data-testid="thought-block"],[data-testid*="thinking"],button')
       .forEach(e => e.remove());
-    return clean(nodeToMd(cl));
+    const txt = clean(nodeToMd(cl));
+    if (seen.has(txt)) return "";
+    seen.add(txt);
+    return txt;
   }
 
   const platformHandlers = {
@@ -133,6 +150,8 @@ javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out=
           if (u) { const txt = extract(u); if (txt && !isGhost(txt)) out += "**Human**\n\n" + txt + SEP; }
           if (a) { const txt = extract(a); if (txt && !isGhost(txt)) out += "**Claude**\n\n" + txt + SEP; }
         });
+        const art = document.querySelector('[data-testid="artifact-content"] code,[class*="artifact"] pre code');
+        if (art) out += `\n\n### Artifact\n\n\`\`\`\n${art.innerText.trim()}\n\`\`\`\n`;
       }
     },
     aistudio: {
@@ -187,7 +206,7 @@ javascript:(async()=>{const SEP="\n\n---\n\n";const h=location.hostname;let out=
   }
 
   if (!handled) {
-    const msgs = document.querySelectorAll('[data-message-author-role],[data-testid*="message"],[data-testid*="turn"],.prose,.markdown,article[role="article"],div[role="article"],.chat-message,.message,.conversation-turn');
+    const msgs = document.querySelectorAll('[data-message-author-role],[data-testid*="message"],[data-testid*="turn"],.prose,.markdown,article[role="article"],div[role="article"],.chat-message,.message,.conversation-turn,[class*="message-content"]');
     if (msgs.length > 0) {
       msgs.forEach(m => {
         const role = m.getAttribute('data-message-author-role') || m.getAttribute('data-testid') || '';
@@ -249,6 +268,7 @@ The response here, with **bold**, `inline code`, and
 
 ## Changelog
 
+- **v0.8** — Markdown table rendering (`TABLE` → `| col |` syntax, separator on `<th>` rows); content dedup via `Set` (safe against virtualized-list double-copies); `[text](url)` link format; button noise removal; Claude Artifact sidebar grab; Perplexity fallback selectors
 - **v0.7** — Refactored to `platformHandlers` config object (one place to fix selector drift); more aggressive thought-stripping (`.o1-thinking`, `[data-testid*="thinking"]`); case-insensitive `isGhost`; `SECTION` in block elements; "Nothing to copy" feedback; fallback selectors expanded
 - **v0.6** — Generic fallback: tries common chatbot selectors on any site, falls back to full page text
 - **v0.5** — Grok support (`grok.com` / `x.com`); shared `extract()` function; `.thinking-container` stripping
