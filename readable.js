@@ -7,10 +7,6 @@
  *
  * Supported: Claude.ai · ChatGPT · Google AI Studio · Grok
  * Fallback: best-effort on any other chatbot site
- *
- * To rebuild the minified bookmarklet after editing:
- *   1. Minify this file (e.g. https://toptal.com/developers/javascript-minifier)
- *   2. Wrap the result: javascript:(<minified code>)();
  */
 
 (async () => {

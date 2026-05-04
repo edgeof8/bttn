@@ -95,7 +95,7 @@ The response here, with **bold**, `inline code`, and
 
 ## Changelog
 
-- **v0.8** — Markdown table rendering (`TABLE` → `| col |` syntax, separator on `<th>` rows); content dedup via `Set` (safe against virtualized-list double-copies); `[text](url)` link format; button noise removal; Claude Artifact sidebar grab; Perplexity fallback selectors
+- **v0.8** — Markdown table rendering (`TABLE` → `| col |` syntax, separator on `<th>` rows); content dedup via `Set` (safe against virtualized-list double-copies); `[text](url)` link format; button noise removal; Claude Artifact sidebar grab
 - **v0.7** — Refactored to `platformHandlers` config object (one place to fix selector drift); more aggressive thought-stripping (`.o1-thinking`, `[data-testid*="thinking"]`); case-insensitive `isGhost`; `SECTION` in block elements; "Nothing to copy" feedback; fallback selectors expanded
 - **v0.6** — Generic fallback: tries common chatbot selectors on any site, falls back to full page text
 - **v0.5** — Grok support (`grok.com` / `x.com`); shared `extract()` function; `.thinking-container` stripping
